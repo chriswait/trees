@@ -1,0 +1,12 @@
+{
+	"name"         : "tree",
+	"version"      : "0.0.1",
+	"description"  : "trees",
+	"main"         : "server.js",
+	"author"       : "Chris",
+	"dependencies" : {
+		"express"    : "latest",
+		"request"    : "latest",
+		"cheerio"    : "latest"
+	}
+}
