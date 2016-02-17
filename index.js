@@ -81,13 +81,26 @@ function process_data(response_data) {
     draw_markers();
 }
 
+function create_infowindow_content(marker) {
+    var content = "<h1>" + marker.title + "</h1>";
+    for (var speciesIndex in marker.species) {
+        var species = marker.species[speciesIndex];
+        content += "<div>";
+        content += "    <span>" + species.count + "</span>";
+        content += "    <span> x </span>";
+        content += "    <span>" + species.name + "</span>";
+        content += "</div>";
+    }
+    return content;
+}
+
 function draw_marker(marker) {
     var marker_latlng = {
         lat: parseFloat(marker.lat),
         lng: parseFloat(marker.lng),
     };
     var infowindow = new google.maps.InfoWindow({
-        content: marker.title,
+        content: create_infowindow_content(marker)
     });
     var map_marker = new google.maps.Marker({
         map: map,
