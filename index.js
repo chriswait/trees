@@ -1,3 +1,8 @@
+var data_url = "data/data.json";
+var markers = [];
+var species = [];
+
+// Map stuff
 var map;
 var sydney = {
     lat: -33.8807184,
@@ -8,15 +13,51 @@ var map_element = document.getElementById('map');
 var map_options = {
     center: sydney,
     zoom: zoom,
+    disableDefaultUI: true
 };
 var open_infowindow;
 
-var data_url = "data/data.json";
-var markers = [];
-var species = [];
+function generateMapStyle() {
+var styles = [
+        {
+            "elementType": "geometry.fill",
+            "stylers": [ { "hue": "#88ff00" } ]
+        },{
+            "elementType": "geometry.stroke",
+            "stylers": [ { "visibility": "off" } ]
+        },{
+            "featureType": "water",
+            "elementType": "geometry.fill",
+            "stylers": [ { "saturation": -31 }, { "hue": "#00eeff" }, { "lightness": -22 } ]
+        },{
+            "elementType": "labels.icon",
+            "stylers": [ { "hue": "#2bff00" }, { "visibility": "off" } ]
+        },{
+            "featureType": "poi.park",
+            "elementType": "geometry.fill",
+            "stylers": [ { "visibility": "on" }, { "hue": "#5eff00" }, { "gamma": 0.71 }, { "saturation": 17 } ]
+        },{
+            "featureType": "road.highway",
+            "stylers": [ { "hue": "#ff9900" }, { "saturation": -24 }, { "visibility": "simplified" } ]
+        }, {
+            "featureType": "landscape.man_made",
+            "stylers": [ { "hue": "#00ff19" }, { "saturation": -7 }, { "gamma": 0.86 } ]
+        }
+    ];
+    var styledMap = new google.maps.StyledMapType(styles, { name: "Styled Map" });
+    return styledMap;
+}
 
 function init_map() {
     map = new google.maps.Map(map_element, map_options);
+    map.mapTypes.set('map_style', generateMapStyle());
+    map.setMapTypeId('map_style');
+    google.maps.event.addListener(map, "click", function(event) {
+        if (open_infowindow) {
+            open_infowindow.close();
+        }
+    });
+
     fetch_data();
 }
 
