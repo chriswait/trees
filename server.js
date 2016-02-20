@@ -59,6 +59,8 @@ var fetch_marker_information = function(marker) {
                 return reject(error);
             }
             var $ = cheerio.load(html);
+
+            // Get attributes
             var location_attr_class = ".dl-location-attr";
             var location_attr_labels = ["SUBURB", "OWNERSHIP", "TREE TYPE", "AGE CLASS", "SETTING", "ORIGIN", "HEIGHT", "SPREAD", "LISTING", "DBH", "YEAR PLANTED", "OWNER"];
 
@@ -71,6 +73,32 @@ var fetch_marker_information = function(marker) {
                     marker[text.toLowerCase()] = next_content;
                 }
             })
+
+            // Get entry-content
+            var entry_content_class = ".entry-content";
+            var entry_content = $(entry_content_class);
+            var section_ids = ["DESCRIPTION", "SIGNIFICANCE", "HISTORICAL", "GALLERY", "NEW-ROYALSLIDER-1"];
+            var current_section, current_section_content;
+            entry_content.children().each(function(index, elem) {
+                var id = $(elem).attr('id');
+                if (id && (section_ids.indexOf(id.toUpperCase()) != -1)) {
+                    if (current_section && current_section_content) {
+                        marker[current_section.toLowerCase()] = current_section_content;
+                    }
+                    current_section = id;
+                    current_section_content = "";
+                } else {
+                    current_section_content += $(elem).text()+ "\n";
+                }
+            });
+
+            // Get Gallery
+            marker.gallery_urls = [];
+            $(".rsTmb img").each(function(index, elem) {
+                if ($(elem).attr('src')) {
+                    marker.gallery_urls.push($(elem).attr('src'));
+                }
+            });
 
             console.log("FETCHED EXTRA");
             resolve(marker);
@@ -123,8 +151,7 @@ var process_marker = function(marker) {
 var process_marker_data = function(marker_data) {
     console.log("PROCESSING MARKERS")
     var marker_promises = [];
-    //for (var i=0; i < marker_data.length; i++) {
-    for (var i=0; i < 5; i++) {
+    for (var i=0; i < marker_data.length; i++) {
         var marker = marker_data[i];
         var marker_promise = process_marker(marker);
         marker_promises.push(marker_promise);
@@ -153,12 +180,15 @@ app.get('/data', function(req, res) {
     res.send(response);
 });
 
-fetch_marker_data()
-.then(function(marker_data) {
-    process_marker_data(marker_data)
-    .then(function() {
-        write_data();
-        //app.listen('8082');
-        //exports = module.exports = app;
-    });
-})
+if (true) {
+    fetch_marker_data()
+    .then(function(marker_data) {
+        process_marker_data(marker_data)
+        .then(function() {
+            write_data();
+        });
+    })
+}
+
+app.listen('8082');
+exports = module.exports = app;
