@@ -48,19 +48,32 @@ var fetch_marker_data = function() {
     });
 };
 
-var fetch_marker_information = function(marker_slug) {
+var fetch_marker_information = function(marker) {
     console.log("FETCHING MARKER INFO");
     return new Promise(function(resolve, reject) {
-        var url = location_url_root + marker_slug + "/";
-        request(data_url, function(error, response, html) {
+        var url = location_url_root + marker.slug + "/";
+        request(url, function(error, response, html) {
             if (error) {
                 console.log("Error fetching data:");
                 console.log(error);
                 return reject(error);
             }
             var $ = cheerio.load(html);
+            var location_attr_class = ".dl-location-attr";
+            var location_attr_labels = ["SUBURB", "OWNERSHIP", "TREE TYPE", "AGE CLASS", "SETTING", "ORIGIN", "HEIGHT", "SPREAD", "LISTING", "DBH", "YEAR PLANTED", "OWNER"];
+
+            var attr = $(location_attr_class);
+            var labels = attr.find('dt');
+            labels.each(function(index, elem) {
+                var text = $(elem).text();
+                if (location_attr_labels.indexOf(text.toUpperCase()) != -1) {
+                    var next_content = $($(elem).next('dd')[0]).text()
+                    marker[text.toLowerCase()] = next_content;
+                }
+            })
+
             console.log("FETCHED EXTRA");
-            resolve(html);
+            resolve(marker);
         });
     });
 };
@@ -98,12 +111,11 @@ var process_marker = function(marker) {
         }
         new_marker.species = species_list;
 
-        fetch_marker_information(marker.slug)
-        .then(function(html) {
-            new_marker.html = html;
-            markers.push(new_marker);
+        fetch_marker_information(new_marker)
+        .then(function(new_marker_with_info) {
+            markers.push(new_marker_with_info);
             console.log("ADDING MARKER: " + markers.length);
-            resolve(new_marker);
+            resolve(new_marker_with_info);
         });
     });
 };
@@ -112,7 +124,7 @@ var process_marker_data = function(marker_data) {
     console.log("PROCESSING MARKERS")
     var marker_promises = [];
     //for (var i=0; i < marker_data.length; i++) {
-    for (var i=0; i < 6; i++) {
+    for (var i=0; i < 5; i++) {
         var marker = marker_data[i];
         var marker_promise = process_marker(marker);
         marker_promises.push(marker_promise);
@@ -146,7 +158,7 @@ fetch_marker_data()
     process_marker_data(marker_data)
     .then(function() {
         write_data();
-        app.listen('8082');
-        exports = module.exports = app;
+        //app.listen('8082');
+        //exports = module.exports = app;
     });
 })
