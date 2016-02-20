@@ -20,25 +20,31 @@ var trim = function(input) {
 };
 
 var fetch_marker_data = function() {
-    console.log("FETCHING");
     return new Promise(function(resolve, reject) {
-        request(data_url, function(error, response, html) {
-            if (error) {
-                console.log("Error fetching data:");
-                console.log(error);
-                return reject(error);
-            }
-            var $ = cheerio.load(html);
-            var data_js = $("#maincontent").children()[0].children[0].data;
-            var data_list_text = data_js.split("= ")[1].slice(0, -2);
-
-            fs.writeFile(raw_path, data_list_text, function(err) {
-                if (err) return console.log(err);
-            });
-
-            var marker_data = JSON.parse(data_list_text);
+        try {
+            var marker_data = require(raw_path);
+            console.log("CACHED");
             resolve(marker_data);
-        });
+        } catch (e) {
+            console.log("FETCHING");
+            request(data_url, function(error, response, html) {
+                if (error) {
+                    console.log("Error fetching data:");
+                    console.log(error);
+                    return reject(error);
+                }
+                var $ = cheerio.load(html);
+                var data_js = $("#maincontent").children()[0].children[0].data;
+                var data_list_text = data_js.split("= ")[1].slice(0, -2);
+
+                fs.writeFile(raw_path, data_list_text, function(err) {
+                    if (err) return console.log(err);
+                });
+
+                var marker_data = JSON.parse(data_list_text);
+                resolve(marker_data);
+            });
+        }
     });
 };
 
