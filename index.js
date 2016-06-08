@@ -2,6 +2,10 @@ var data_url = "data/data.json";
 var markers = [];
 var species = [];
 
+function toTitleCase(str) {
+    return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+}
+
 // Map stuff
 var map;
 var sydney = {
@@ -82,7 +86,9 @@ function process_data(response_data) {
 }
 
 function create_infowindow_content(marker) {
-    var content = "<h1>" + marker.title + "</h1>";
+    var content = "<div class='tree-marker' id='" + marker.slug + "'>";
+    content += "<h1>" + marker.title + "</h1>";
+    // Draw species
     for (var speciesIndex in marker.species) {
         var species = marker.species[speciesIndex];
         content += "<div>";
@@ -91,6 +97,23 @@ function create_infowindow_content(marker) {
         content += "    <span>" + species.name + "</span>";
         content += "</div>";
     }
+
+    // Draw details
+    var marker_details_keys = ["suburb", "ownership", "tree type", "age class", "setting", "origin", "height", "spread", "listing", "dbh", "year planted", "owner"];
+    for (var i in marker_details_keys) {
+        var key = marker_details_keys[i];
+        content+= "<h2>" + toTitleCase(key) + "</h2>";
+        content+= "<span>" + marker[key] + "</span>";
+    }
+
+    var marker_long_details_keys = ["description", "significance", "historical"];
+    for (var i in marker_long_details_keys) {
+        var key = marker_long_details_keys[i];
+        content+= "<h2>" + toTitleCase(key) + "</h2>";
+        content+= "<span>" + marker[key] + "</span>";
+    }
+    content += "</div>";
+
     return content;
 }
 

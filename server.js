@@ -23,10 +23,8 @@ var fetch_marker_data = function() {
     return new Promise(function(resolve, reject) {
         try {
             var marker_data = require(raw_path);
-            console.log("CACHED");
             resolve(marker_data);
         } catch (e) {
-            console.log("FETCHING");
             request(data_url, function(error, response, html) {
                 if (error) {
                     console.log("Error fetching data:");
@@ -49,9 +47,9 @@ var fetch_marker_data = function() {
 };
 
 var fetch_marker_information = function(marker) {
-    console.log("FETCHING MARKER INFO");
     return new Promise(function(resolve, reject) {
         var url = location_url_root + marker.slug + "/";
+        console.log(url);
         request(url, function(error, response, html) {
             if (error) {
                 console.log("Error fetching data:");
@@ -67,12 +65,30 @@ var fetch_marker_information = function(marker) {
             var attr = $(location_attr_class);
             var labels = attr.find('dt');
             labels.each(function(index, elem) {
-                var text = $(elem).text();
-                if (location_attr_labels.indexOf(text.toUpperCase()) != -1) {
-                    var next_content = $($(elem).next('dd')[0]).text()
-                    marker[text.toLowerCase()] = next_content;
+                elem = $(elem);
+                var label_text = elem.text();
+                if (location_attr_labels.indexOf(label_text.toUpperCase()) != -1) {
+                    var next = $(elem.next('dd'));
+                    var next_content = next.text();
+
+                    /*
+                    // Check if this value is multi-line
+                    // See if the next label is blank
+                    var next_label = $(elem.next('dt'));
+                    var next_label_text = next_label.text();
+                    console.log("NEXT" + next_label_text);
+
+                    if (next_label && (next_label_text === "")) {
+                        var next_value = $(next_label.next('dd'));
+                        var next_value_text = next_value.text();
+
+                        console.log("Next value: " + next_value_text);
+                        next_content += " - " + next_value;
+                    }
+                    */
+                    marker[label_text.toLowerCase()] = next_content;
                 }
-            })
+            });
 
             // Get entry-content
             var entry_content_class = ".entry-content";
@@ -100,14 +116,12 @@ var fetch_marker_information = function(marker) {
                 }
             });
 
-            console.log("FETCHED EXTRA");
             resolve(marker);
         });
     });
 };
 
 var process_marker = function(marker) {
-    console.log("PROCESSING MARKER")
     return new Promise(function(resolve, reject) {
         var new_marker = {
             "title": marker.title,
@@ -149,7 +163,6 @@ var process_marker = function(marker) {
 };
 
 var process_marker_data = function(marker_data) {
-    console.log("PROCESSING MARKERS")
     var marker_promises = [];
     for (var i=0; i < marker_data.length; i++) {
         var marker = marker_data[i];
@@ -160,7 +173,6 @@ var process_marker_data = function(marker_data) {
 };
 
 var write_data = function() {
-    console.log("WRITING DATA");
     console.log("markers: " + markers.length);
     console.log("species: " + all_species.length);
     var data = {
